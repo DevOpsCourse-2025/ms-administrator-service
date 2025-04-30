@@ -13,7 +13,7 @@ public interface AdministratorService {
     AdministratorResponseDTO signUpAdministrator(AdministratorRequestDTO administrator);
     AdministratorResponseDTO signInAdministrator(AdministratorRequestDTO administrator);
     AdministratorResponseDTO findAdministratorByEmail(String email);
-    void deleteAdministratorByEmail(String email);
+    AdministratorResponseDTO deleteAdministratorByEmail(String email);
     AdministratorResponseDTO updateAdministrator(AdministratorRequestDTO administrator);
     List<AdministratorResponseDTO>  getAdministratorList();
 }

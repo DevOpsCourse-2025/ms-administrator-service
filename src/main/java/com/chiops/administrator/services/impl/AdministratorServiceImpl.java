@@ -26,8 +26,17 @@ public class AdministratorServiceImpl implements AdministratorService {
 
     @Override
     public AdministratorResponseDTO signUpAdministrator(AdministratorRequestDTO administrator) {
+        
+        if(administrator.getEmail().isEmpty() || administrator.getInvitationCode().isEmpty() || administrator.getPassword().isEmpty()){
+            throw new BadRequestException("The field of email, password and invitation code are OBLIGATORY");
+        }
+
+        if(!administrator.getEmail().endsWith(".com")){
+            throw new BadRequestException("The field of email is incorrect, write a valid email");
+        }
+
         if(invitationCodeClient.findByCode(administrator.getInvitationCode()).isEmpty()) {
-            throw new NotFoundException("Invitation code " + administrator.getInvitationCode() + " not found");
+            throw new BadRequestException("Bad invitation code " + administrator.getInvitationCode() + "be sure to write the correct invitation code.");
         }
 
         if (administratorRepository.findByEmail(administrator.getEmail()).isPresent()) {
@@ -48,6 +57,9 @@ public class AdministratorServiceImpl implements AdministratorService {
 
     @Override
     public AdministratorResponseDTO findAdministratorByEmail(String email) {
+        if (email== null || email.isBlank()){
+            throw new BadRequestException("Email as parameter is obligatory");
+        }
         Administrator administrator = administratorRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("Administrator with email " + email + " not found"));
 
@@ -56,8 +68,17 @@ public class AdministratorServiceImpl implements AdministratorService {
 
     @Override
     public AdministratorResponseDTO signInAdministrator(AdministratorRequestDTO administrator) {
+
+        if(administrator.getEmail().isEmpty() || administrator.getInvitationCode().isEmpty() || administrator.getPassword().isEmpty()){
+            throw new BadRequestException("The field of email, password and invitation code are OBLIGATORY");
+        }
+
+        if(!administrator.getEmail().endsWith(".com")){
+            throw new BadRequestException("The field of email is incorrect, write a valid email");
+        }
+
         Administrator existingAdministrator = administratorRepository.findByEmail(administrator.getEmail())
-                .orElseThrow(() -> new NotFoundException("Administrator with email " + administrator.getEmail() + " not found"));
+                .orElseThrow(() -> new BadRequestException("Invalid email " + administrator.getEmail()));
 
         if (!existingAdministrator.getPassword().equals(administrator.getPassword())
             || !existingAdministrator.getInvitationCode().equals(administrator.getInvitationCode())) {
@@ -70,19 +91,37 @@ public class AdministratorServiceImpl implements AdministratorService {
 
         return toResponseDTO(existingAdministrator);
     }
-
     @Override
-    public void deleteAdministratorByEmail(String email) {
-        Administrator administrator = administratorRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Administrator with email " + email + " not found"));
+    public AdministratorResponseDTO deleteAdministratorByEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new BadRequestException("Email as parameter is obligatory");
+        }
 
-        administratorRepository.delete(administrator);
+        Administrator existing = administratorRepository.findByEmail(email)
+            .orElseThrow(() ->
+                new BadRequestException("The email parameter is incorrect")
+            );
+
+        administratorRepository.delete(existing);
+        return toResponseDTO(existing);
     }
+        
 
     @Override
     public AdministratorResponseDTO updateAdministrator(AdministratorRequestDTO administrator) {
-        Administrator existingAdministrator = administratorRepository.findByEmail(administrator.getEmail())
-                .orElseThrow(() -> new NotFoundException("Administrator with email " + administrator.getEmail() + " not found"));
+        
+        if(administrator.getEmail().isEmpty() || administrator.getInvitationCode().isEmpty() || administrator.getPassword().isEmpty()){
+            throw new BadRequestException("The field of email, password and invitation code are OBLIGATORY");
+        }
+
+        if(!administrator.getEmail().endsWith(".com")){
+            throw new BadRequestException("The field of email is incorrect, write a valid email");
+        }
+
+        Administrator existingAdministrator = administratorRepository.findByInvitationCode(administrator.getInvitationCode())
+                .orElseThrow(() -> new BadRequestException("InvitationCode cannot be changed, be sure to write de InvitationCode correctly"));
+
+        
 
         existingAdministrator.setEmail(administrator.getEmail());
         existingAdministrator.setPassword(administrator.getPassword());
@@ -94,9 +133,6 @@ public class AdministratorServiceImpl implements AdministratorService {
     @Override
     public List<AdministratorResponseDTO> getAdministratorList() {
         List<Administrator> admins = administratorRepository.findAll();
-        if (admins.isEmpty()) {
-            throw new NotFoundException("No administrators found in the system");
-        }
         return admins.stream().map(this::toResponseDTO).collect(Collectors.toList());
     }
 

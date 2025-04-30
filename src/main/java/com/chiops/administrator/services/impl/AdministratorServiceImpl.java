@@ -117,9 +117,14 @@ public class AdministratorServiceImpl implements AdministratorService {
         if(!administrator.getEmail().endsWith(".com")){
             throw new BadRequestException("The field of email is incorrect, write a valid email");
         }
-
         Administrator existingAdministrator = administratorRepository.findByInvitationCode(administrator.getInvitationCode())
-                .orElseThrow(() -> new BadRequestException("InvitationCode cannot be changed, be sure to write de InvitationCode correctly"));
+        .orElseThrow(() -> new BadRequestException("InvitationCode cannot be changed, be sure to write the correct InvitationCode correctly"));
+
+
+        if (!existingAdministrator.getInvitationCode().equals(administrator.getInvitationCode())){
+            throw new BadRequestException("InvitationCode cannot be changed, it should not be different from the administrator previous register");
+        }
+
 
         
 
